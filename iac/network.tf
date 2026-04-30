@@ -95,3 +95,43 @@ resource "aws_route_table_association" "priv_b_assoc" {
   subnet_id      = aws_subnet.priv_b.id
   route_table_id = aws_route_table.private_rt_a.id
 }
+
+
+#  VPC ENDPOINTS osea Puentes Internos
+
+
+# 1 Endpoint para S3 
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-east-1.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private_rt_a.id]
+  tags = { Name = "${var.nombre_proyecto}-vpce-s3-${terraform.workspace}" }
+}
+
+# 2 Security Group para el Endpoint de SQS
+
+resource "aws_security_group" "vpce_sqs_sg" {
+  name        = "${var.nombre_proyecto}-vpce-sqs-sg-${terraform.workspace}"
+  description = "Permitir trafico interno hacia SQS"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block] # Solo acepta tráfico de nuestra propia VPC
+  }
+  tags = { Name = "${var.nombre_proyecto}-sg-vpce-sqs-${terraform.workspace}" }
+}
+
+# 3. Endpoint para SQS 
+resource "aws_vpc_endpoint" "sqs" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.us-east-1.sqs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.priv_a.id, aws_subnet.priv_b.id]
+  security_group_ids  = [aws_security_group.vpce_sqs_sg.id]
+  private_dns_enabled = true
+  tags = { Name = "${var.nombre_proyecto}-vpce-sqs-${terraform.workspace}" }
+}
