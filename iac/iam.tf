@@ -11,13 +11,13 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 
 # ROL PARA LA LAMBDA DE CARGA 
 resource "aws_iam_role" "upload_role" {
-  name               = "proyectoaws-upload-role-${terraform.workspace}"
+  name               = "${var.nombre_proyecto}-${var.upload_lambda_name}-role-${terraform.workspace}"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
 # Permisos para Upload: Escribir en S3 y Enviar a SQS
 resource "aws_iam_role_policy" "upload_policy" {
-  name = "proyectoaws-upload-policy-${terraform.workspace}"
+  name = "${var.nombre_proyecto}-${var.upload_lambda_name}-policy-${terraform.workspace}"
   role = aws_iam_role.upload_role.id
 
   policy = jsonencode({
@@ -44,13 +44,13 @@ resource "aws_iam_role_policy" "upload_policy" {
 
 # 3  ROL PARA LA LAMBDA DE PROCESAMIENTO 
 resource "aws_iam_role" "crop_role" {
-  name               = "proyectoaws-crop-role-${terraform.workspace}"
+  name               = "${var.nombre_proyecto}-${var.crop_lambda_name}-role-${terraform.workspace}"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
 # Permisos para Crop: Leer/Escribir en S3 y Leer de SQS
 resource "aws_iam_role_policy" "crop_policy" {
-  name = "proyectoaws-crop-policy-${terraform.workspace}"
+  name = "${var.nombre_proyecto}-${var.crop_lambda_name}-policy-${terraform.workspace}"
   role = aws_iam_role.crop_role.id
 
   policy = jsonencode({
