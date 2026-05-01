@@ -1,0 +1,10 @@
+{
+  "name": "upload-lambda",
+  "version": "1.0.0",
+  "description": "Recibe imagenes y las guarda en S3",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/client-sqs": "^3.0.0"
+  }
+}
