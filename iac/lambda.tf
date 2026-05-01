@@ -14,7 +14,7 @@ data "archive_file" "crop_zip" {
 # UPLOAD
 resource "aws_lambda_function" "upload_lambda" {
   filename         = data.archive_file.upload_zip.output_path
-  function_name    = "proyectoaws-upload-${terraform.workspace}"
+  function_name    = "${var.nombre_proyecto}-${var.upload_lambda_name}-${terraform.workspace}"
   role             = aws_iam_role.upload_role.arn
   handler          = "index.handler"
   runtime          = "nodejs18.x"
@@ -37,7 +37,7 @@ resource "aws_lambda_function" "upload_lambda" {
 #  CROP 
 resource "aws_lambda_function" "crop_lambda" {
   filename         = data.archive_file.crop_zip.output_path
-  function_name    = "proyectoaws-crop-${terraform.workspace}"
+  function_name    = "${var.nombre_proyecto}-${var.crop_lambda_name}-${terraform.workspace}"
   role             = aws_iam_role.crop_role.arn
   handler          = "index.handler"
   runtime          = "nodejs18.x"

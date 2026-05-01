@@ -23,3 +23,14 @@ variable "config_red" {
   }
 }
 
+variable "upload_lambda_name" {
+  description = "Nombre base de la funcion lambda de carga"
+  type        = string
+  default     = "upload-image-func"
+}
+
+variable "crop_lambda_name" {
+  description = "Nombre base de la funcion lambda de procesamiento"
+  type        = string
+  default     = "crop-image-func"
+}
