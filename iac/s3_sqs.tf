@@ -1,20 +1,18 @@
-
 #  S3 
-
 
 # Bucket principal para imágenes
 resource "aws_s3_bucket" "image_bucket" {
-  bucket        = "proyectoaws-storage-${terraform.workspace}"
+  bucket        = "${var.nombre_proyecto}-storage-${terraform.workspace}"
   force_destroy = true 
 
   tags = { 
-    Name        = "proyectoaws-bucket-${terraform.workspace}"
+    Name        = "${var.nombre_proyecto}-bucket-${terraform.workspace}"
     Environment = terraform.workspace
   }
 }
 
 
-# configuracon para borrar automáticamente cualquier archivo después de 1 dia
+# configuracion para borrar automáticamente cualquier archivo después de 1 dia
 resource "aws_s3_bucket_lifecycle_configuration" "cleanup" {
   bucket = aws_s3_bucket.image_bucket.id
 
@@ -28,21 +26,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "cleanup" {
 }
 
 
-
 #  SQS 
 
 # 1DLQ
 resource "aws_sqs_queue" "image_dlq" {
-  name = "proyectoaws-dlq-${terraform.workspace}"
+  name = "${var.nombre_proyecto}-dlq-${terraform.workspace}"
   tags = { 
-    Name        = "proyectoaws-dlq-${terraform.workspace}"
+    Name        = "${var.nombre_proyecto}-dlq-${terraform.workspace}"
     Environment = terraform.workspace
   }
 }
 
 # 2 Cola Principal
 resource "aws_sqs_queue" "image_queue" {
-  name                      = "proyectoaws-queue-${terraform.workspace}"
+  name                      = "${var.nombre_proyecto}-queue-${terraform.workspace}"
   delay_seconds             = 0
   message_retention_seconds = 86400 
   receive_wait_time_seconds = 10    
@@ -53,7 +50,7 @@ resource "aws_sqs_queue" "image_queue" {
   })
 
   tags = { 
-    Name        = "proyectoaws-queue-${terraform.workspace}"
+    Name        = "${var.nombre_proyecto}-queue-${terraform.workspace}"
     Environment = terraform.workspace
   }
 }

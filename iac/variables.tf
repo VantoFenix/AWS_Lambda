@@ -1,7 +1,7 @@
-variable "proyectoaws" {
+variable "nombre_proyecto" {
   description = "Nombre base para los recursos"
   type        = string
-  default     = "image-processor"
+  default     = "aws_proyecto"
 }
 
 

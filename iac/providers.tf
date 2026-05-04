@@ -13,7 +13,7 @@ provider "aws" {
   
   default_tags {
     tags = {
-      Project   = "proyectoaws"
+      Project   = "${var.nombre_proyecto}"
       Environment = terraform.workspace
       Owner     = "bruno"
     }
