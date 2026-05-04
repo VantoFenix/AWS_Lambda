@@ -17,7 +17,8 @@ resource "aws_lambda_function" "upload_lambda" {
   function_name    = "${var.nombre_proyecto}-${var.upload_lambda_name}-${terraform.workspace}"
   role             = aws_iam_role.upload_role.arn
   handler          = "index.handler"
-  timeout          = 15 
+  memory_size      = 512
+  timeout          = 29
   runtime          = "nodejs18.x"
   source_code_hash = data.archive_file.upload_zip.output_base64sha256
 
