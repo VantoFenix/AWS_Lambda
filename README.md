@@ -1,35 +1,42 @@
-# Velasquez Gongora , Bruno Martin
+# Velasquez Gongora, Bruno Martin
+
+## Resumen del Proyecto
+
+Este sistema automatiza la carga y el procesamiento de imagenes en la nube de AWS utilizando una arquitectura orientada a eventos. El objetivo principal es que un usuario pueda enviar una foto por una API y que el sistema la guarde y la procese de forma asincrona sin bloquear la respuesta inicial.
+
+## Arquitectura y Flujo de Trabajo
+
+1. Entrada de datos: El API Gateway recibe un JSON con la imagen en base64.
+2. Procesamiento de carga: La funcion Upload Lambda recibe los datos, decodifica la imagen y la guarda en un bucket de S3. Luego envia un mensaje a una cola SQS con la informacion del archivo.
+3. Comunicacion: SQS maneja la mensajeria para que si la segunda funcion esta ocupada o falla, el mensaje no se pierda.
+4. Procesamiento de imagen: La funcion Crop Lambda se activa con el mensaje de SQS, descarga la imagen de la carpeta originals en S3, la recorta y deberia guardarla en una ruta distinta.
+
+## Configuracion del Entorno y Particularidades Tecnicas
+
+se han realizado ajustes especificos en la infraestructura que son criticos:
+
+- Memoria y Tiempos: La Lambda de carga requiere al menos 512 MB de memoria y un timeout de 29 segundos. Esto es necesario porque al estar dentro de una VPC, el arranque en frio  y la conexion inicial a la red privada pueden tardar mas de los 3 segundos que vienen por defecto en AWS
+- Seguridad de Red: Las Lambdas estan en subredes privadas. Para que puedan comunicarse con otros servicios de AWS, el Security Group debe tener una regla de salida  para el protocolo TCP en el puerto 443 o permitir todo el trafico de salida, si no fuera asi lapeticion se quedara colgada
 
 
-## Arquitectura del Sistema
+## importante problema con la Libreria Sharp 
 
-El flujo de trabajo implementado es el siguiente:
+Un detalle importante que encontre durante el desarrollo es el manejo de la libreria sharp. Como el desarrollo se hizo en una laptop con Windows y las Lambdas de AWS corren sobre Linux, hay una incompatibilidad de binarios. 
 
-1. Recepcion: Un API Gateway recibe la imagen via solicitud HTTP POST
-2. Carga Segura: La funcion Upload Lambda procesa la solicitud, guarda la imagen original en un bucket S3 protegido en una subred privada, y encola un mensaje en SQS
-3. Mensajeria Asincrona: SQS actua como un buffer, asegurando que las imagenes se procesen de manera confiable. Si un mensaje falla multiples veces, se redirige a una Dead Letter Queue 
-4. Procesamiento: La funcion Crop Lambda es disparada por SQS, descarga la imagen de S3, la redimensiona a 300x300 utilizando la libreria sharp y guarda la version procesada en una carpeta distinta dentro de S3
+Si se hace un npm install normal en Windows, la funcion de procesamiento fallara con un error y para solucionar esto antes de subir el codigo, se debe instalar la libreria especificamente para el entorno de destino con el siguiente comando dentro de la carpeta de la funcion:
 
-## Tecnologias Utilizadas
+npm install --platform=linux --arch=x64 sharp
 
-- Cloud Provider: Amazon Web Services (AWS)
-- IaC: Terraform
-- Backend: Node.js (AWS Lambda)
-- Librerias principales: aws-sdk/client-s3, aws-sdk/client-sqs, sharp
+## Pasos para el Despliegue
 
-## Seguridad, Costos y Autenticacion
+1. Preparacion de archivos: Ir a las carpetas de las funciones dentro de src e instalar las dependencias. En la funcion de crop, usar el comando mencionado arriba para compatibilidad con Linux.
+2. Inicializacion: Dentro de la carpeta iac, ejecutar terraform init para descargar los proveedores necesarios.
+3. Aplicacion: Ejecutar terraform apply -auto-approve. Es normal que la primera vez tarde varios minutos por la creacion de la VPC y el NAT Gateway.
+4. Pruebas: Usar Postman para enviar un POST al endpoint generado. Si la primera peticion da un error de tiempo, intentar una segunda vez ya que la red privada suele tardar en activarse la primera vez.
+5. Limpieza: Al terminar todas las pruebas y capturas de pantalla, es obligatorio ejecutar terraform destroy para evitar cobros innecesarios por los recursos de red que no entran en la capa gratuita.
 
-- Autenticacion Segura (Cross-Account): No se utilizan credenciales estaticas de usuarios IAM en el archivo providers.tf. El despliegue se realiza utilizando una cuenta secundaria mediante llaves temporales de sesion, asumiendo los permisos delegados desde la cuenta primaria.
-- Red Privada: Las funciones Lambda operan dentro de subredes privadas en una VPC, accediendo a S3 y SQS a traves de VPC Endpoints internos
-- Control de Costos: Implementacion de reglas de ciclo de vida para la eliminacion automatica de archivos en S3 despues de 24 horas.
+## Tecnologias
 
-## Estructura del Repositorio
-
-- /iac: Archivos de configuracion de Terraform.
-- /src: Codigo fuente de las funciones Lambda (Node.js).
-
-## Requisitos de Despliegue
-
-- AWS CLI configurado con las credenciales temporales de la cuenta secundaria.
-- Terraform instalado.
-- Node.js para la instalacion de dependencias (se requiere compilar la libreria sharp para arquitectura Linux antes del despliegue).
+- Amazon Web Services (VPC, Lambda, S3, SQS, API Gateway, CloudWatch)
+- Terraform para infraestructura como codigo
+- Node.js 18.x para la logica del backend
