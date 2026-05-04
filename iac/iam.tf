@@ -74,3 +74,14 @@ resource "aws_iam_role_policy" "crop_policy" {
     ]
   })
 }
+# Permisos de VPC para la Lambda de Carga
+resource "aws_iam_role_policy_attachment" "upload_vpc_access" {
+  role       = aws_iam_role.upload_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+# Permisos de VPC para la Lambda de Procesamiento 
+resource "aws_iam_role_policy_attachment" "crop_vpc_access" {
+  role       = aws_iam_role.crop_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}

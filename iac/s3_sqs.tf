@@ -19,6 +19,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "cleanup" {
   rule {
     id     = "delete-after-24h"
     status = "Enabled"
+    filter {}
     expiration {
       days = 1
     }
