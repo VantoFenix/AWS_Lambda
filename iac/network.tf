@@ -120,9 +120,16 @@ resource "aws_security_group" "vpce_sqs_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block] # Solo acepta tráfico de nuestra propia VPC
+    cidr_blocks = [aws_vpc.main.cidr_block] 
   }
   tags = { Name = "${var.nombre_proyecto}-sg-vpce-sqs-${terraform.workspace}" }
+   egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
 }
 
 # 3. Endpoint para SQS 
