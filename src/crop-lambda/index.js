@@ -27,23 +27,32 @@ exports.handler = async (event) => {
             const imageBuffer = await streamToBuffer(response.Body);
 
             //  Procesar con SHARP 
+          const size = 40;
+            const circleSvg = `<svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${size/2}"/></svg>`;
+
             const processedBuffer = await sharp(imageBuffer)
-                .resize(300, 300, { fit: 'cover' })
+                .resize(size, size, { fit: 'cover' })
+                .composite([{ input: Buffer.from(circleSvg), blend: 'dest-in' }])
+                .png() 
                 .toBuffer();
 
-            //  Subir la imagen procesada a S3 
+          
+            const fileBaseName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+            const newFileName = `${fileBaseName}.png`;
+
+            //Subir la imagen procesada a S3 
             await s3.send(new PutObjectCommand({
                 Bucket: bucketName,
-                Key: `processed/${fileName}`,
+                Key: `processed/${newFileName}`,
                 Body: processedBuffer,
-                ContentType: "image/jpeg"
+                ContentType: "image/png"
             }));
 
-            console.log(`Imagen ${fileName} procesada exitosamente.`);
+            console.log(`Imagen ${newFileName} procesada exitosamente en formato circular 40x40.`);
 
         } catch (error) {
             console.error("Error en el procesamiento:", error);
-        
+           
             throw error; 
         }
     }
