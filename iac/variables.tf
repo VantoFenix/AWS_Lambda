@@ -1,7 +1,7 @@
 variable "nombre_proyecto" {
   description = "Nombre base para los recursos"
   type        = string
-  default     = "aws_proyecto"
+  default     = "aws-proyecto"
 }
 
 
